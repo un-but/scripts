@@ -1,2 +1,5 @@
 # All development directories
 __*__
+
+# Sqlite file
+orders_list.py
