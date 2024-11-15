@@ -1,5 +1,6 @@
-# All development directories
 __*__
-
-# Sqlite file
-orders_list.py
+.test/
+.venv/
+orders_list.db
+TODO.md
+files/*-output*

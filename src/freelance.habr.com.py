@@ -1,22 +1,19 @@
-"""Functions for getting all orders from Habr Freelance in search request."""
-
 import asyncio
 
 import aiohttp
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
-import database
+from common.tools import save_array_to_csv
 
 
 async def get_data_from_habr() -> None:
-    """Main function, adding info from all pages to database."""
     async_tasks = []
     async with aiohttp.ClientSession() as session:
         p = 1
         headers = {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-            "user-agent": UserAgent().random
+            "user-agent": UserAgent().random,
         }
         while True:
             url = f"https://freelance.habr.com/tasks?categories=development_bots&page={p}"
@@ -38,16 +35,11 @@ async def get_data_from_habr() -> None:
 
             p += 1
 
-        await asyncio.gather(*async_tasks)
+        save_array_to_csv(await asyncio.gather(*async_tasks), "freelance.habr.com-output.csv")
 
 
-async def get_data_from_habr_order_page(order_url: str, session: aiohttp.ClientSession) -> None:
-    """Functions for getting info from one page
 
-    Args:
-        order_url (str): link to order page
-        session (aiohttp.ClientSession): aiohttp session for requests to order pages
-    """
+async def get_data_from_habr_order_page(order_url: str, session: aiohttp.ClientSession) -> tuple:
     headers = {"user-agent": UserAgent().random}
 
     async with session.get(url=order_url, headers=headers, timeout=1000) as res:
@@ -59,11 +51,11 @@ async def get_data_from_habr_order_page(order_url: str, session: aiohttp.ClientS
     order_price = order_soup.find(class_="task__finance").get_text(strip=True)
 
     order_meta = order_soup.find(class_="task__meta").get_text(" ", strip=True).split("\n • ")
-    order_date = f"{order_meta[0]}/нет информации"
+    order_date = f"{order_meta[0]}"
     order_responses = order_meta[1]
 
 
-    database.add_order_to_db(
+    return (
         order_url,
         order_name,
         order_date,
